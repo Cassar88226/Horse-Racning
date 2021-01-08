@@ -1,4 +1,5 @@
 from datetime import datetime, date, timedelta
+import calendar
 import requests
 import re
 import csv
@@ -6,94 +7,83 @@ import os
 import numpy
 import pandas as pd
 from bs4 import BeautifulSoup as bs
-from simplified_scrapy import SimplifiedDoc,req,utils
 import pypyodbc
 from time import sleep
 import time
 import schedule
 from decimal import Decimal 
-import tensorflow as tf
-from tensorflow import keras
 
-#Write to CSV File
-#file = open('harnessresults.csv', 'w', newline='', encoding='utf8')
-#writer = csv.writer(file)
-
-#Connect to SQL database
-conn = pypyodbc.connect("Driver={SQL Server};"
-                     "Server=DESKTOP-KOOIS0J;"
-                     "Database=Horses;"
-                     "Trusted_Connection=yes;",
-                     autocommit=True
-                )
+def schedule_func():
+    
+    #Connect to SQL database
+    conn = pypyodbc.connect("Driver={SQL Server};"
+                        "Server=DESKTOP-KOOIS0J;"
+                        "Database=Horses;"
+                        "Trusted_Connection=yes;",
+                        autocommit=True
+                    )
 
 
-mycursor = conn.cursor()
+    mycursor = conn.cursor()
 
 
 
-headers = {'User-Agent': 'Mozilla/5.0'}
+    headers = {'User-Agent': 'Mozilla/5.0'}
 
-#conn.close()
-sleep(1)
+    #conn.close()
+    sleep(1)
 
 
 
-base_url = "http://www.harness.org.au/racing/fields"
-base1_url = "http://www.harness.org.au/"
-try:
-    page1 = requests.get('http://www.harness.org.au/racing/fields', headers=headers)
-except requests.exceptions.ConnectionError:
-    r.status_code = "Connection refused"
-#webpage_response = requests.get('http://www.harness.org.au/racing/fields')
+    base_url = "http://www.harness.org.au/racing/fields"
+    base1_url = "http://www.harness.org.au/"
 
-soup = bs(page1.content, "html.parser")
-soup123 = requests.session()
-format = "%d-%m-%y"
-delta = timedelta(days=1)
-tomorrow = datetime.today() + timedelta(days=1)
-tomorrow1 = tomorrow.strftime("%d%m%y")
-print(tomorrow1)
-enddate = date.today()
+    soup123 = requests.session()
 
-future = date.today() + timedelta(days=3)
-#startdate = datetime(2017, 1, 1)
-#prints header in csv
-#writer.writerow(['Date1', 'Venue', 'RaceNumber', 'RaceName', 'RaceTitle', 'RaceDistance', 'Place', 'HorseName', 'Prizemoney', 'Row', 'Trainer', 'Driver', 'Margin', 'StartingOdds', 'StewardsComments', 'Scratching', 'TrackRating', 'Gross_Time', 'Mile_Rate', 'Lead_Time', 'First_Quarter', 'Second_Quarter', 'Third_Quarter', 'Fourth_Quarter'])
-n = 1
+    # get tomorrow field
+    tomorrow = datetime.today() + timedelta(days=1)
+    nextdate = tomorrow + timedelta(days=1)
+    
+    day = tomorrow.day
+    month_name = calendar.month_name[tomorrow.month]
+    week_name = calendar.day_name[tomorrow.weekday()]
 
-while n > 0:
-    enddate += timedelta(days=1)
-    enddate1 = enddate.strftime("%d-%m-%Y")
-    #enddate2 = enddate.strftime("%Y-%m-%d")
-    #new_url = base_url
-    # soup123 = requests.sessions()
+    full_date = " ".join([week_name, str(day), month_name])
+
+    nextday = nextdate.day
+    next_month_name = calendar.month_name[nextdate.month]
+    next_week_name = calendar.day_name[nextdate.weekday()]
+
+    next_full_date = " ".join([next_week_name, str(nextday), next_month_name])
+
+    print(full_date)
+
     soup12 = soup123.get(base_url, headers=headers)
-    print(soup12)
     soup1 = bs(soup12.text, "html.parser") 
     table1 = soup1.find('table', class_='meetingList')
-    print(table1)
-    tr = table1.find_all('tr', {'class':['odd', 'even']})
-    print(tr)
+    tr = table1.find_all('tr')
     sleep(1)
-    
-   # sql1 = "SET DATEFORMAT dmy;"
-   # mycursor.execute(sql1)
-   # conn.commit()
-    
 
+    flag = False
     for tr1 in tr:
+        try:
+            tr_header = tr1.find('h4').get_text()
+            if tr_header == full_date:
+                flag = True
+                continue
+            if tr_header == next_full_date:
+                flag = False
+                break
+        except:
+            pass
+        if not flag:
+            continue
         tr5 = tr1.find('a').get_text()
         tr2 = tr1.find('a')['href']
         print(tr5)
         print(tr1)
         print(tr2)
-        tr3 = tr2[-6:]
-        #tr3 = tr3 + "20"
-        #tr4 = datetime.strptime(tr3, '%d%m%y')
-        #print(tr4)
-        #tr2 = tr1.find('a')['href']
-        #print(tr2)
+
         newurl = base1_url + tr2
         print(newurl)
         with requests.Session() as s:
@@ -124,10 +114,10 @@ while n > 0:
 
                 #if tableofrunners:
                 #if 'Pl' not in tableofrunners.find('th', class_='horse_number'):
-                   # continue
+                # continue
                 
                 if tableofrunners is not None:
-      
+    
                     for row in tableofrunners.select("tr"):
                     
                         data = {
@@ -159,7 +149,7 @@ while n > 0:
                         result = result.text.replace('horse_number: ', '').replace('\xa0', '')
                         if 'Pl' in result:
                             continue
-                      
+                    
                         trainer = row.find('td', class_='trainer')
                         print(trainer)
                         trainer = trainer.text.replace('Trainer: ', '') if trainer else ''
@@ -167,7 +157,7 @@ while n > 0:
                         driver = row.find('td', class_='driver-short')
                         driver = driver.text.replace('Driver: ', '') if driver else ''
 
-                     
+                    
 
                         if "SCRATCHED" in driver:
                             continue
@@ -176,8 +166,8 @@ while n > 0:
                         
                         horse_number = horse_number.text.replace('Form: ', '') if horse_number else ''
 
-                       
-                       
+                    
+                    
                         form = row.find('td', class_='form')
                         form = form.text.replace('Form: ', '') 
 
@@ -204,20 +194,20 @@ while n > 0:
 
 
                         #if form[:] == 's':
-                         #   spelllastfive = 1
+                        #   spelllastfive = 1
                         #elif form[:] == 'b':
-                         #   spelllastfive = 1
+                        #   spelllastfive = 1
                         #else:
-                           # spelllastfive = 0
+                        # spelllastfive = 0
 
                         #if form[-1] == 's':
-                         #   firstup = 1
+                        #   firstup = 1
                         #elif form[:] == 'b':
-                         #   firstup = 1
+                        #   firstup = 1
                         #else:
-                         #   firstup = 0
+                        #   firstup = 0
                         #else:
-                         #   firststarter = 0
+                        #   firststarter = 0
                         
                         
                         
@@ -237,7 +227,7 @@ while n > 0:
                         class1 = row.find('td', class_='horse_class')
                         class1 = class1.text.replace('HorseClass: ', '') 
                         class1 = class1.replace('\xa0', '') if class1 else ''
-                   
+                
                         handicap = row.find('td', class_='hcp')
                         handicap = handicap.text.replace('Handicap: ', '') if handicap else ''
                         handicap = handicap.replace('m', '')
@@ -248,7 +238,7 @@ while n > 0:
                         barrier = barrier.text.replace('Row: ', '') if barrier else ''
 
                         
-                      
+                    
 
                         #driver = row.find('td', class_='driver-short')
                         #driver = driver.text.replace('Driver: ', '') if driver else ''
@@ -287,8 +277,8 @@ while n > 0:
                         data['firstup'].append(firstup)
                         data['Firststarter'].append(firststarter)
 
-   
- 
+
+
 
                         table = pd.DataFrame(data, columns=['Venue', 'RaceNumber', 'RaceName', 'RaceName', 'RaceDistance', 'HorseNumber', 'HorseName', 'Handicap', 'Row', 'Trainer', 'Driver', 'StartingOdds', 'HorseClass', 'spelllastfive', 'firstup', 'HorseID', 'Form', 'Firststarter'])
                         print(table)
@@ -297,9 +287,11 @@ while n > 0:
                         Values = [tr5, race_number, race_name1, race_title1, race_distance1, horse_number, horsename, handicap, barrier, trainer, driver, startingprice, class1, horse_id, form, spelllastfive, firstup, firststarter]
                         
                         mycursor.execute(sql, Values)
-                        #except:
                         conn.commit()
 
                         print(mycursor.rowcount, "records inserted")
 
-                        n -= 1
+schedule.schedule.every().day.at("02:00").do(schedule_func)
+while True:
+    schedule.run_pending()
+    sleep(10)
