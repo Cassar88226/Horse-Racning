@@ -126,7 +126,7 @@ def schedule_func():
                             'RaceNumber': [],
                             'RaceName': [],
                             'RaceTitle': [],
-                            'RaceDistance': [],          
+                            'RaceDistance': [],
                             'HorseNumber': [],
                             'HorseName': [],
                             'Handicap': [],
@@ -191,28 +191,6 @@ def schedule_func():
                             firststarter = 1
                         else:
                             firststarter = 0
-
-
-                        #if form[:] == 's':
-                        #   spelllastfive = 1
-                        #elif form[:] == 'b':
-                        #   spelllastfive = 1
-                        #else:
-                        # spelllastfive = 0
-
-                        #if form[-1] == 's':
-                        #   firstup = 1
-                        #elif form[:] == 'b':
-                        #   firstup = 1
-                        #else:
-                        #   firstup = 0
-                        #else:
-                        #   firststarter = 0
-                        
-                        
-                        
-                        #form = form.replace('*', '').replace('r', '0').replace('u', '0').replace('f', '0').replace('d', '0').replace('s', '').replace('n', '').replace('b', '')
-
 
 
 
