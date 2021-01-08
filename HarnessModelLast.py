@@ -6,7 +6,6 @@ import os
 import numpy
 import pandas as pd
 from bs4 import BeautifulSoup as bs
-from simplified_scrapy import SimplifiedDoc,req,utils
 import pypyodbc
 from time import sleep
 import time
@@ -14,60 +13,44 @@ import schedule
 from decimal import Decimal
 from dateutil.relativedelta import relativedelta
 
+def schedule_func():
 
-#Write to CSV File
-#file = open('harnessresults.csv', 'w', newline='', encoding='utf8')
-#writer = csv.writer(file)
-
-#Connect to SQL database
-conn = pypyodbc.connect("Driver={SQL Server};"
-                     "Server=DESKTOP-KOOIS0J;"
-                     "Database=Horses;"
-                     "Trusted_Connection=yes;",
-                     autocommit=True
-                )
+    print("Called")
 
 
-mycursor = conn.cursor()
+    # Connect to SQL database
+    conn = pypyodbc.connect("Driver={SQL Server};"
+                         "Server=DESKTOP-KOOIS0J;"
+                         "Database=Horses;"
+                         "Trusted_Connection=yes;",
+                         autocommit=True
+                    )
 
 
-
-headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 6.2; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.100 Safari/537.36'}
-
-#conn.close()
-sleep(0.5)
+    mycursor = conn.cursor()
 
 
 
-base_url = "http://www.harness.org.au/racing/results/?firstDate="
-base1_url = "http://www.harness.org.au"
-try:
-    page1 = requests.get('http://www.harness.org.au/racing/results/?firstDate=', headers=headers)
-except requests.exceptions.ConnectionError:
-    r.status_code = "Connection refused"
-#webpage_response = requests.get('http://www.harness.org.au/racing/results/?firstDate=')
+    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 6.2; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.100 Safari/537.36'}
 
-soup = bs(page1.content, "html.parser")
-
-soup123 = requests.session()
-
-format = "%d-%m-%y"
-delta = timedelta(days=1)
-#yesterday = datetime.today() - timedelta(days=1)
-
-enddate = datetime(2020, 10, 31)
-startdate = datetime(2020, 12, 27)
-#prints header in csv
-#writer.writerow(['Date1', 'Venue', 'RaceNumber', 'RaceName', 'RaceTitle', 'RaceDistance', 'Place', 'HorseName', 'Prizemoney', 'Row', 'Trainer', 'Driver', 'Margin', 'StartingOdds', 'StewardsComments', 'Scratching', 'TrackRating', 'Gross_Time', 'Mile_Rate', 'Lead_Time', 'First_Quarter', 'Second_Quarter', 'Third_Quarter', 'Fourth_Quarter'])
+    #conn.close()
+    sleep(1)
 
 
-while enddate < startdate:
-    enddate += timedelta(days=1)
+
+    base_url = "http://www.harness.org.au/racing/results/?firstDate="
+    base1_url = "http://www.harness.org.au"
+
+
+    soup123 = requests.session()
+
+    enddate = datetime.today()
+
+
 
     enddate1 = enddate.strftime("%d-%m-%Y")
     enddate2 = enddate.strftime("%Y-%m-%d")
     new_url = base_url + str(enddate1)
-    # soup123 = requests.sessions()
     soup12 = soup123.get(new_url, headers=headers)
 
     soup1 = bs(soup12.content, "html.parser") 
@@ -76,9 +59,6 @@ while enddate < startdate:
     tr = table1.find_all('tr', {'class':['odd', 'even']})
 
     
-   # sql1 = "SET DATEFORMAT dmy;"
-   # mycursor.execute(sql1)
-   # conn.commit()
     
 
     for tr1 in tr:
@@ -93,7 +73,7 @@ while enddate < startdate:
             results = soup.find_all('div', {'class':'forPrint'})
             resultsv2 = soup.find_all('table', {'class':'raceFieldTable'})
             
-               
+            
             #writer.writerow(['Date1', 'Venue', 'RaceNumber', 'RaceTitle', 'RaceDistance', 'Place', 'HorseName', 'Prizemoney', 'Row1', 'HorseNumber', 'Trainer', 'Driver', 'Margin', 'StartingOdds', 'StewardsComments', 'Scratching', 'TrackRating', 'Gross_Time', 'Mile_Rate', 'Lead_Time', 'First_Quarter', 'Second_Quarter', 'Third_Quarter', 'Fourth_Quarter'])
         
             for race in results:
@@ -121,13 +101,12 @@ while enddate < startdate:
                 firstquarter = ''
                 secondquarter = ''
                 thirdquarter = ''
-                fourthquarter = ''                
+                fourthquarter = ''
                 
                 if tableoftimes and tableofrunners:
                     for row in tableoftimes.select('td>strong:contains(":")'):
-            #            for t in row: 
                         if "Track Rating:" in row.contents[0]:
-                            trackrating = row.nextSibling.strip()     
+                            trackrating = row.nextSibling.strip()
                         elif "Gross Time:" in row.contents[0]:
                             grosstime = row.nextSibling.strip()
                         elif "Mile Rate:" in row.contents[0]:
@@ -167,26 +146,13 @@ while enddate < startdate:
                         tq = ''
                         frq = ''
 
-                        #print("Before: ", grosstime, milerate, leadtime, firstquarter, secondquarter, thirdquarter, fourthquarter)
 
                         if(grosstime == '0'):
                             gt = datetime.strptime(str(timedelta(seconds=int("0"))), '%H:%M:%S').time()
                         else:
                             if(grosstime != '' and grosstime != '0' and type(grosstime) != type(None)):
                                 grosstime = grosstime.replace('.', ':')
-                                # d = grosstime.split(':')
                                 gt = datetime.strptime(grosstime, '%M:%S:%f').time()
-                                # if(len(d) > 1):
-                                #     s1 = d[0]
-                                #     s2 = d[1]
-                                #     sec = timedelta(seconds=int(s1))
-                                #     sec = str(sec) + ":" + s2 
-                                #     gt = datetime.strptime(sec, '%H:%M:%S:%f').time()
-                                # else:
-                                #     s2 = d[0]
-                                #     sec = timedelta(seconds=int(s2))
-                                #     sec = str(sec)
-                                #     gt = datetime.strptime(sec, '%H:%M:%S').time()
                             else:
                                 gt = datetime.strptime(str(timedelta(seconds=int("0"))), '%H:%M:%S').time()
                     
@@ -196,18 +162,6 @@ while enddate < startdate:
                             if(milerate != '' and milerate != '0' and type(milerate) != type(None)):
                                 milerate = milerate.replace('.', ':')
                                 mr = datetime.strptime(milerate, '%M:%S:%f').time()
-                                # d = milerate.split(':')
-                                # if(len(d) > 1):
-                                #     s1 = d[0]
-                                #     s2 = d[1]
-                                #     sec = timedelta(seconds=int(s1))
-                                #     sec = str(sec) + ":" + s2 
-                                #     mr = datetime.strptime(sec, '%H:%M:%S:%f').time()
-                                # else:
-                                #     s2 = d[0]
-                                #     sec = timedelta(seconds=int(s2))
-                                #     sec = str(sec)
-                                #     mr = datetime.strptime(sec, '%H:%M:%S').time()
                             else:
                                 mr = datetime.strptime(str(timedelta(seconds=int("0"))), '%H:%M:%S').time()
 
@@ -313,10 +267,9 @@ while enddate < startdate:
                             else:
                                 frq= datetime.strptime(str(timedelta(seconds=int("0"))), '%H:%M:%S').time()
                             
-                        # print("After: ",gt, mr, lt, fq, sq, tq, frq)
 
 
-                 
+                
                     for row in tableofrunners.select("tr"):
                     
                         data = {
@@ -352,7 +305,7 @@ while enddate < startdate:
                             'Fourth_Quarter': [],
                             'GateSpeed': [],
                             'Leader': [],
-  
+
                             'Placer': [],
                             'Winner': []
                         }
@@ -386,11 +339,11 @@ while enddate < startdate:
 
                         horse_id = row.find('a').get('href')
                         horse_id = horse_id[-6:]
-             
+            
 
                         horseweb = row.find('a').get('href')
                         horseurl = base1_url + horseweb
-       
+    
                         with requests.Session() as s:
                             try:
                                 webpage_response = s.get(horseurl, headers=headers)
@@ -409,53 +362,34 @@ while enddate < startdate:
                             horseage1 = datetime.strptime(Age1, '%d %B %Y')
                             horsebday = datetime(2021, 9, 1)
                             age = relativedelta(horsebday, horseage1).years
-   
+
                             Colour = horseresult.find_all('td')[3].get_text()
                             Colour1 = Colour.split()[0]
-                 
+                
                             Sex = Colour.split()[1]
-                     
+                    
                             Sire = horseresult.find_all('td')[5].get_text()
-                          
-
-                            #for tr35 in horseresult:
-                                #horseage = tr35[].find_all('td')[1].get_text().replace('\xa0', '')
-
-       
-                                
-                             
-                                
-                                #print(age)
-                                #print(horseage1)
-                                #Colour = tr35.find_all('td')[3].get_text()
-                                #Colour1 = Colour.split()[0]
-                                #Sex = Colour.split()[1]
-                                #Sire = tr35.find_all('td')[5].get_text()
-                                #print(Sire)
-
                         
 
-                            #print(fouldate)
-                            
 
                         prizemoney = row.find('td', class_='prizemoney')
                         prizemoney = prizemoney.text.replace('Prizemoney: ', '') if prizemoney else ''
                         prizemoney = prizemoney.replace('$', '')
                         prizemoney = prizemoney.replace(',', '')
-                        if prizemoney is not '':
+                        try:
                             prizemoney = float(prizemoney)
-                        else:
-                            None
+                        except:
+                            prizemoney = 0
 
-                   
+                
                         handicap = row.find('td', class_='hcp')
                         handicap = handicap.text.replace('Handicap: ', '') if handicap else ''
                         handicap = handicap.replace('m', '')
                         handicap = handicap.replace('FT', '1').replace('\xa0', '')
-                        if handicap is not '':
+                        try:
                             handicap = float(handicap)
-                        else:
-                            None
+                        except:
+                            handicap = 0
 
                         barrier = row.find('td', class_='barrier')
                         barrier = barrier.text.replace('Row: ', '') if barrier else ''
@@ -476,10 +410,10 @@ while enddate < startdate:
                         margin = margin.replace('HFNK', '0.15')
                         margin = margin.replace('NK', '0.20')
                         
-                        if margin is not '':
+                        try:
                             margin = float(margin)
-                        else:
-                            None
+                        except:
+                            margin = 0
                         
 
                         if row.find('td', class_='starting_price') == None:
@@ -515,7 +449,7 @@ while enddate < startdate:
 
                         scratchingnumber = row.find('td', class_='number')
                         scratchingnumber = scratchingnumber.text.replace('Scratching: ', '') if scratchingnumber else ''
-                       
+                    
 
                         
                         data['DayCalender'].append(enddate2)
@@ -552,91 +486,19 @@ while enddate < startdate:
                         data['Leader'].append(leader)
                         data['Placer'].append(placer)
                         data['Winner'].append(winner)
-                        #data['jockeywin'].append(temp1_ave)
-                        #data['trainerwin'].append(trainerwin)
-                        #data['jockeystrikerate'].append(temp1_ave)
-
-
-
-                        #driver1 = data['Driver'].unique()
-                        #trainer1 = data['Trainer'].unique()
-                        #horsed1 = data['HorseID'].unique()
-
-                        #temp3 = data[data['HorseID'] == data['HorseID']]['DayCalender']
-                        #temp3 = data['DayCalender'].values.tolist()
-
-                        #temp1 = results[results['driver'] == results['driver']]['place']
-                        #temp1 = temp1['place'].values.tolist()
-                        #print(temp1)
-
-                        #for i in range(len(horsed)):
-
-                            #temp2 = results.loc[results.horsed == results.horsed[i]][['DayCalender']]
-                            #temp2 = temp2['DayCalender'].values.tolist()
-                            #print(temp2)
-                            #if len(temp2) != 0:
-                                #temp_int2 = map(int, temp2)
-                                #days = temp_int2[-2] - temp_int2[-1]
-                                #print(days)
-                                #results['trainerwin'][i] = trainerwinave
-
- 
-                        #if 1 in temp1:
-                            #temp += 1
-                        #else:
-                         #   temp2 += 1
-
-                        #if len(temp1) != 0:
-                         #   temp_int = map(int, temp1)
-                         #   print(temp_int)
-                         #   temp1_ave = np.mean(list(temp_int))
-                         #   print(temp1_ave)
-
-                        #for i in range(len(driver)):
-                        #    temp1 = results[results.driver == results.driver[i]][['place']]
-                        #    temp1 = temp1['place'].values.tolist()
-                        #    print(temp1)
- 
-                        #    if 1 in temp1:
-                        #       temp += 1
-                        #    else:
-                        #       temp2 += 1
-
-                        #    if len(temp1) != 0:
-                        #        temp_int = map(int, temp1)
-                        #        print(temp_int)
-                        #        temp1_ave = np.mean(list(temp_int))
-                        #        print(temp1_ave)
-                      #  for i in range(len(trainer)):
-
-                       #     temp2 = results.loc[results.trainer == results.trainer[i]][['place']]
-                       #     temp2 = temp2['place'].values.tolist()
-                       #     print(temp2)
-                       #     if len(temp2) != 0:
-                       #         temp_int2 = map(int, temp2)
-                       #         trainerwinave = np.mean(list(temp_int2))
-                       #         print(trainerwinave)
-                       #         results['trainerwin'][i] = trainerwinave
-
-                      #  data['jockeywin'].append(temp1_ave)
-                      #  data['trainerwin'].append(trainerwin)
-                      #  data['jockeystrikerate'].append(temp1_ave)
-
-
-
-
-                        #data['time'] = pd.to_datetime(data['Gross']).dt.time
+                        
                         table = pd.DataFrame(data, columns=['DayCalender','Venue','RaceNumber', 'RaceName', 'RaceTitle', 'RaceDistance', 'Place', 'HorseName', 'HorseID', 'Age', 'Colour', 'Sire', 'Sex', 'Prizemoney', 'Row', 'Trainer', 'Driver', 'Margin', 'StartingOdds', 'StewardsComments', 'Scratching','TrackRating' 'Mile_Rate', 'Lead_Time', 'First_Quarter', 'Second_Quarter', 'Third_Quarter', 'Fourth_Quarter',  'Leader', 'GateSpeed', 'Placer', 'Winner'])
-                        print(table)
+                        # print(table)
                         sql = "INSERT INTO horses (DayCalender, Venue, RaceNumber, RaceName, RaceTitle, RaceDistance, Place, HorseName, HorseID, Age, Colour, Sire, Sex, Prizemoney, Handicap, Row, Trainer, Driver, Margin, StartingOdds, StewardsComments, Scratching, TrackRating, Gross_Time, Mile_Rate, Lead_Time, First_Quarter, Second_Quarter, Third_Quarter, Fourth_Quarter, Leader, GateSpeed, Placer, Winner) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
                         Values = [enddate2, tr2, race_number, race_name1, race_title1, race_distance1, place, horsename, horse_id, age, Colour1, Sire, Sex, prizemoney, handicap, barrier, trainer, driver, margin, startingprice, stewardscomments, scratchingnumber, trackrating, gt, mr, lt, fq, sq, tq, frq, leader, GateSpeed, placer, winner]
 
-                        #try:
                         mycursor.execute(sql, Values)
-                        #except:
                         conn.commit()
                         print(mycursor.rowcount, "records inserted")
-              
 
+schedule.schedule.every().day.at("02:00").do(schedule_func)
+while True:
+    schedule.run_pending()
+    sleep(10)
 
 
