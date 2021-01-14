@@ -296,7 +296,7 @@ n_cols = X.shape[1]
 
 #shap.summary_plot(shap_values, X, plot_type = "bar")
 
-sql3 = ('''SELECT * FROM Field''')
+sql3 = ('''SELECT * FROM Field WHERE ''')
 
 
 

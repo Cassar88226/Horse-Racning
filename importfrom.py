@@ -42,6 +42,8 @@ def schedule_func():
 
     # get tomorrow field
     tomorrow = datetime.today() + timedelta(days=1)
+
+    raceday = tomorrow.strftime("%Y-%m-%d")
     nextdate = tomorrow + timedelta(days=1)
     
     day = tomorrow.day
@@ -235,6 +237,7 @@ def schedule_func():
                         #scratchingnumber = row.find('td', class_='number')
                         #scratchingnumber = scratchingnumber.text.replace('Scratching: ', '') if scratchingnumber else ''
 
+                        date['DayCalender'].append(raceday)
                         data['Venue'].append(tr5)
                         data['RaceNumber'].append(race_number)
                         data['RaceName'].append(race_name1)
@@ -258,11 +261,11 @@ def schedule_func():
 
 
 
-                        table = pd.DataFrame(data, columns=['Venue', 'RaceNumber', 'RaceName', 'RaceName', 'RaceDistance', 'HorseNumber', 'HorseName', 'Handicap', 'Row', 'Trainer', 'Driver', 'StartingOdds', 'HorseClass', 'spelllastfive', 'firstup', 'HorseID', 'Form', 'Firststarter'])
+                        table = pd.DataFrame(data, columns=['DayCalender', 'Venue', 'RaceNumber', 'RaceName', 'RaceName', 'RaceDistance', 'HorseNumber', 'HorseName', 'Handicap', 'Row', 'Trainer', 'Driver', 'StartingOdds', 'HorseClass', 'spelllastfive', 'firstup', 'HorseID', 'Form', 'Firststarter'])
                         print(table)
-                        sql = "INSERT INTO Field (Venue, RaceNumber, RaceName, RaceTitle, RaceDistance, HorseNumber, HorseName, Handicap, Row, Trainer, Driver, StartingOdds, HorseClass, HorseID, Form, spelllastfive, firstup, Firststarter) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
+                        sql = "INSERT INTO Field (DayCalender, Venue, RaceNumber, RaceName, RaceTitle, RaceDistance, HorseNumber, HorseName, Handicap, Row, Trainer, Driver, StartingOdds, HorseClass, HorseID, Form, spelllastfive, firstup, Firststarter) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
 
-                        Values = [tr5, race_number, race_name1, race_title1, race_distance1, horse_number, horsename, handicap, barrier, trainer, driver, startingprice, class1, horse_id, form, spelllastfive, firstup, firststarter]
+                        Values = [raceday, tr5, race_number, race_name1, race_title1, race_distance1, horse_number, horsename, handicap, barrier, trainer, driver, startingprice, class1, horse_id, form, spelllastfive, firstup, firststarter]
                         
                         mycursor.execute(sql, Values)
                         conn.commit()
