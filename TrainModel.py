@@ -26,7 +26,7 @@ import pickle
 
 # Read Dataset
 # from feature engineering stage
-dataset = pd.read_csv('feature selection2.csv', index_col=False)
+dataset = pd.read_csv('feature selection.csv', index_col=False)
 print(dataset.head())
 
 # Prepare training/test data
@@ -58,7 +58,7 @@ print(X.shape)
 print(y.shape)
 
 # split data into train and test sets
-X_train, X_test, y_train, y_test = model_selection.train_test_split(X, y, train_size=0.8, test_size=0.2, random_state=1)
+X_train, X_test, y_train, y_test = model_selection.train_test_split(X, y, train_size=0.9, test_size=0.1, random_state=1)
 
 print(X_train.shape)
 
