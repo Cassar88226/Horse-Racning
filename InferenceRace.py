@@ -8,9 +8,10 @@ import matplotlib.pyplot as plt
 import keras
 from keras.models import model_from_json
 import pickle
+from collections import OrderedDict
 from datetime import datetime, timedelta
 
-# # connect to sql database
+# connect to sql database
 conn1 = pypyodbc.connect("Driver={SQL Server};"
                      "Server=DESKTOP-KOOIS0J;"
                      "Database=Horses;"
@@ -27,19 +28,19 @@ print(sql3)
 
 
 data3 = pd.read_sql(sql3, conn1)
-#data1.columns.tolist()
+# #data1.columns.tolist()
 
 future_races_df = pd.DataFrame(data3)
-
+# future_races_df = pd.read_csv('dataset4(AutoRecovered).csv')
 # load json and create model
-model_json = 'model-128-256-128-64-19(all relu)-20210112-23-21.json'
+model_json = 'model-128-256-512-256-128-64-19(all relu)-20210119-15-20.json'
 json_file = open(model_json, 'r')
 loaded_model_json = json_file.read()
 json_file.close()
 model = model_from_json(loaded_model_json)
 
 # load weights into new model
-model_name = 'model-128-256-128-64-19(all relu)-20210112-23-21-epoch=145-val_loss=0.046082.hdf5'
+model_name = 'model-128-256-512-256-128-64-19(all relu)-20210119-15-20-epoch=122-val_loss=0.046502.hdf5'
 model.load_weights(model_name)
 
 # load standard scaler
@@ -47,7 +48,7 @@ scaler_name = 'StandardScaler.pkl'
 ss = pickle.load(open(scaler_name, 'rb'))
 
 # load LabelEncoder for Venue Name
-venue_encoder_name = 'VenueName_Encoder.pkl'
+venue_encoder_name = 'Venue_Encoder.pkl'
 venue_le = pickle.load(open(venue_encoder_name, 'rb'))
 
 # load LabelEncoder for row
@@ -65,11 +66,11 @@ driver_le = pickle.load(open(driver_encoder_name, 'rb'))
 
 # choose the important features from dataframe
 feature_df = future_races_df[['daycalender', 'racenumber', 'venue', 'racedistance', 'horseid', 'horsename', 'row', 'trainer', 'driver', 'handicap', 'age']].copy()
-feature_df = feature_df.rename(columns={"daycalender": "day", "venue": "venuename", "racenumber": "raceno"})
+feature_df = feature_df.rename(columns={"daycalender": "day", "racenumber": "raceno"})
 
 # apply Encoders
 # venue encoder
-feature_df['venuename'] = venue_le.transform(feature_df['venuename'])
+feature_df['venue'] = venue_le.transform(feature_df['venue'])
 # row encoder
 feature_df['row'] = row_le.transform(feature_df['row'])
 # trainer encoder
@@ -84,21 +85,21 @@ feature_df = feature_df.drop_duplicates()
 # Create Pivot table
 
 # create test dataframe to predict 
-# choose 2 features from race : venuename and racedistance.
+# choose 2 features from race : venue and racedistance.
 # choose 6 features from horses : horseid, row, trainer, driver, handicap, age
 # total feature number of each race will be 6 * 19 + 2 = 116
 
 # create extended dataframe to display probabilities
-# choose 2 features from race : race date, venuename and racedistance.
+# choose 2 features from race : race date, venue and racedistance.
 # choose 6 features from horses : horseid, horsename, row, trainer, driver, handicap, age
 # total feature number of each race will be 6 * 19 + 2 = 116
 # initialize the probabilities of horse finising 1'st
 
-group_df = feature_df.groupby(['day', 'raceno', 'venuename', 'racedistance'])
+group_df = feature_df.groupby(['day', 'raceno', 'venue', 'racedistance'])
 print(group_df)
 
-columns = ['venuename', 'racedistance']
-extend_columns = ['venuename', 'racedistance', 'day']
+columns = ['venue', 'racedistance']
+extend_columns = ['venue', 'racedistance', 'day']
 common_columns = ['horseid', 'row', 'trainer', 'driver', 'handicap', 'age']
 extend_common_columns = ['horseid', 'horsename', 'row', 'trainer', 'driver', 'handicap', 'age']
 
@@ -128,10 +129,10 @@ print(extend_columns)
 
 for group_name, df in group_df:
     # print(group_df)
-    day, raceno, venuename, racedistance = group_name
+    day, raceno, venue, racedistance = group_name
     ext_item = OrderedDict()
     item = OrderedDict()
-    ext_item['venuename'] = item['venuename'] = venuename
+    ext_item['venue'] = item['venue'] = venue
     ext_item['racedistance'] = item['racedistance'] = racedistance
     ext_item['day'] = day
     index = 1
@@ -183,8 +184,8 @@ for i, row in extend_df.iterrows():
 # Display the probabilities of horse for each race
 for i, row in extend_df.iterrows():
     print("Race Date : " + row['day'])
-    venuename = venue_le.inverse_transform([int(row['venuename'])])[0]
-    print("Venue Name : " + venuename)
+    venue = venue_le.inverse_transform([int(row['venue'])])[0]
+    print("Venue Name : " + venue)
     print("Distance : " + str(row['racedistance']))
     horsecnt = int(row['horsecnt'])
     for index in  range(1, horsecnt+1):

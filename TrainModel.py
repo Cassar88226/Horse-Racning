@@ -37,8 +37,13 @@ print(dataset.head())
     # 80% for training
     # 20% for testing(validation)
 
+X = dataset[dataset.columns[:-19]]
+y = dataset[dataset.columns[-19:]]
+
+
 # convert target data(from place1 to place19) to won or loss(1 or 0)
 y = dataset[dataset.columns[-19:]].applymap(lambda x: 1.0 if 0.5 < x < 1.5 else 0.0)
+
 
 # scaling X data
 ss = preprocessing.StandardScaler()
@@ -66,7 +71,7 @@ print(X_train.shape)
 # Use keras to build the model with easy-to-use api Sequential
 # Have to mention that input layer has 116 inputs. The calculation is following:
 
-    # 2 features from race data - venuename, racedistance
+    # 2 features from race data - venue, racedistance
     # 19 horses has 6 features - horseid,row, trainer, driver, handicap, age
 # Output layer has 19 nodes
 

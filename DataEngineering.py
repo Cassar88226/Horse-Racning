@@ -24,7 +24,7 @@ data1 = pd.read_sql(sql2, conn1)
 dataframe = pd.DataFrame(data1)
 
 # select important features from dataset
-feature_df = dataframe[['daycalender', 'raceno', 'venuename', 'racedistance', 'horseid', 'row', 'trainer', 'driver', 'handicap', 'age', 'place']].copy()
+feature_df = dataframe[['day', 'raceno', 'venue', 'racedistance', 'horseid', 'row', 'trainer', 'driver', 'handicap', 'age', 'place']].copy()
 
 # shuffle dataset
 feature_df = shuffle(feature_df)
@@ -34,10 +34,10 @@ feature_df = shuffle(feature_df)
 
 # venue encoding
 venue_le = LabelEncoder()
-feature_df['venuename'] = venue_le.fit_transform(feature_df['venuename'])
+feature_df['venue'] = venue_le.fit_transform(feature_df['venue'])
 
 
-with open("VenueName_Encoder.pkl", 'wb') as venue_file:
+with open("Venue_Encoder.pkl", 'wb') as venue_file:
     pickle.dump(venue_le, venue_file)
     venue_file.close()
 
@@ -78,13 +78,13 @@ print(feature_df.shape)
 
 # Create Pivot table
 
-# choose 2 features from race : venuename and racedistance.
+# choose 2 features from race : venue and racedistance.
 # choose 6 features from horses : horseid, row, trainer, driver, handicap, age
 # maximum horse number of race is 19.
 # total feature number of each race will be 6 * 19 + 2 = 116
-group_df = feature_df.groupby(['day', 'raceno', 'venuename', 'racedistance'])
+group_df = feature_df.groupby(['day', 'raceno', 'venue', 'racedistance'])
 print(group_df)
-columns = ['venuename', 'racedistance']
+columns = ['venue', 'racedistance']
 common_columns = ['horseid', 'row', 'trainer', 'driver', 'handicap', 'age']
 max_number = 19
 for i in range(1, max_number + 1):
@@ -105,9 +105,9 @@ print(columns)
 
 for group_name, df in group_df:
     # print(group_df)
-    day, raceno, venuename, racedistance = group_name
+    day, raceno, venue, racedistance = group_name
     item = OrderedDict()
-    item['venuename'] = venuename
+    item['venue'] = venue
     item['racedistance'] = racedistance
     index = 1
     for i, row in df.iterrows():
