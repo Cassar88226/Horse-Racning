@@ -44,7 +44,7 @@ def schedule_func():
 
     soup123 = requests.session()
 
-    enddate = datetime.today()
+    enddate = datetime.today() - timedelta(days=1)
 
 
 
