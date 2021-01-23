@@ -11,36 +11,36 @@ import pickle
 from collections import OrderedDict
 from datetime import datetime, timedelta
 
-# # connect to sql database
-# conn1 = pypyodbc.connect("Driver={SQL Server};"
-#                      "Server=DESKTOP-KOOIS0J;"
-#                      "Database=Horses;"
-#                      "Trusted_Connection=yes;",
-#                      autocommit=True)
-# today = datetime.today()
-# tomorrow = today + timedelta(days=1)
-# start_date = today.strftime("%Y-%m-%d")
-# end_date = tomorrow.strftime("%Y-%m-%d")
+# connect to sql database
+conn1 = pypyodbc.connect("Driver={SQL Server};"
+                     "Server=DESKTOP-KOOIS0J;"
+                     "Database=Horses;"
+                     "Trusted_Connection=yes;",
+                     autocommit=True)
+today = datetime.today()
+tomorrow = today + timedelta(days=1)
+start_date = today.strftime("%Y-%m-%d")
+end_date = tomorrow.strftime("%Y-%m-%d")
 
-# sql3 = ("SELECT * FROM Field WHERE CAST(DayCalender as date)>='{0}' and CAST(DayCalender as date)<='{1}'".format(start_date, end_date))
-# print(sql3)
+sql3 = ("SELECT * FROM Field WHERE CAST(DayCalender as date)>='{0}' and CAST(DayCalender as date)<='{1}'".format(start_date, end_date))
+print(sql3)
 
 
 
-# data3 = pd.read_sql(sql3, conn1)
-# # #data1.columns.tolist()
+data3 = pd.read_sql(sql3, conn1)
+# #data1.columns.tolist()
 
-# future_races_df = pd.DataFrame(data3)
-future_races_df = pd.read_csv('dataset4(AutoRecovered).csv')
+future_races_df = pd.DataFrame(data3)
+# future_races_df = pd.read_csv('dataset4(AutoRecovered).csv')
 # load json and create model
-model_json = 'model-128-256-512-256-128-64-19(all relu)-20210119-15-20.json'
+model_json = 'model-128-256-512-256-128-64-19(all relu)-20210123-16-21.json'
 json_file = open(model_json, 'r')
 loaded_model_json = json_file.read()
 json_file.close()
 model = model_from_json(loaded_model_json)
 
 # load weights into new model
-model_name = 'model-128-256-512-256-128-64-19(all relu)-20210119-15-20-epoch=122-val_loss=0.046502.hdf5'
+model_name = 'model-128-256-512-256-128-64-19(all relu)-20210123-16-21-epoch=01-val_loss=0.051577.hdf5'
 model.load_weights(model_name)
 
 # load standard scaler
