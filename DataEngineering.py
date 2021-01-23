@@ -23,9 +23,10 @@ data1 = pd.read_sql(sql2, conn1)
 
 dataframe = pd.DataFrame(data1)
 
+# dataframe = pd.read_csv('dataset4(AutoRecovered).csv')
 # select important features from dataset
-feature_df = dataframe[['day', 'raceno', 'venue', 'racedistance', 'horseid', 'row', 'trainer', 'driver', 'handicap', 'age', 'place']].copy()
-
+feature_df = dataframe[['day', 'raceno', 'venue', 'racedistance', 'horseid', 'row', 'trainer', 'driver', 'handicap', 'age', 'sex', 'place']].copy()
+print(feature_df)
 # shuffle dataset
 feature_df = shuffle(feature_df)
 
@@ -68,6 +69,26 @@ with open("Driver_Encoder.pkl", 'wb') as driver_file:
     pickle.dump(driver_le, driver_file)
     driver_file.close()
 
+
+# handicap encoding
+handicap_le = LabelEncoder()
+feature_df['handicap'] = handicap_le.fit_transform(feature_df['handicap'])
+
+
+with open("Handicap_Encoder.pkl", 'wb') as handicap_file:
+    pickle.dump(handicap_le, handicap_file)
+    handicap_file.close()
+
+# sex encoding
+sex_le = LabelEncoder()
+feature_df['sex'] = sex_le.fit_transform(feature_df['sex'])
+
+
+with open("Sex_Encoder.pkl", 'wb') as sex_file:
+    pickle.dump(sex_le, sex_file)
+    sex_file.close()
+
+
 # remove the rows which place is 0
 index_names = feature_df[ feature_df['place'] == 0 ].index
 feature_df.drop(index_names,inplace = True)
@@ -85,7 +106,7 @@ print(feature_df.shape)
 group_df = feature_df.groupby(['day', 'raceno', 'venue', 'racedistance'])
 print(group_df)
 columns = ['venue', 'racedistance']
-common_columns = ['horseid', 'row', 'trainer', 'driver', 'handicap', 'age']
+common_columns = ['horseid', 'row', 'trainer', 'driver', 'handicap', 'age', 'sex']
 max_number = 19
 for i in range(1, max_number + 1):
     ith_columns = []
@@ -118,6 +139,7 @@ for group_name, df in group_df:
         item['horseid' + str(index)] = row['horseid']
         item['handicap' + str(index)] = row['handicap']
         item['age' + str(index)] = row['age']
+        item['sex' + str(index)] = row['sex']
         item['place' + str(index)] = row['place']
         index += 1
     if index >= max_number:
@@ -130,12 +152,13 @@ for group_name, df in group_df:
         item['horseid' + str(index1)] = 0
         item['handicap' + str(index1)] = 0
         item['age' + str(index1)] = 0
+        item['sex' + str(index1)] = 0
         item['place' + str(index1)] = 0
     result_df = result_df.append(item, ignore_index = True)
 
 result_df = result_df.fillna(0)
 
 
-result_df.to_csv('feature selection.csv', index=None)
+result_df.to_csv('feature selection with sex.csv', index=None)
 
 

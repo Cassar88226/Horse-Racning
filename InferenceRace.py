@@ -11,27 +11,27 @@ import pickle
 from collections import OrderedDict
 from datetime import datetime, timedelta
 
-# connect to sql database
-conn1 = pypyodbc.connect("Driver={SQL Server};"
-                     "Server=DESKTOP-KOOIS0J;"
-                     "Database=Horses;"
-                     "Trusted_Connection=yes;",
-                     autocommit=True)
-today = datetime.today()
-tomorrow = today + timedelta(days=1)
-start_date = today.strftime("%Y-%m-%d")
-end_date = tomorrow.strftime("%Y-%m-%d")
+# # connect to sql database
+# conn1 = pypyodbc.connect("Driver={SQL Server};"
+#                      "Server=DESKTOP-KOOIS0J;"
+#                      "Database=Horses;"
+#                      "Trusted_Connection=yes;",
+#                      autocommit=True)
+# today = datetime.today()
+# tomorrow = today + timedelta(days=1)
+# start_date = today.strftime("%Y-%m-%d")
+# end_date = tomorrow.strftime("%Y-%m-%d")
 
-sql3 = ("SELECT * FROM Field WHERE CAST(DayCalender as date)>='{0}' and CAST(DayCalender as date)<='{1}'".format(start_date, end_date))
-print(sql3)
+# sql3 = ("SELECT * FROM Field WHERE CAST(DayCalender as date)>='{0}' and CAST(DayCalender as date)<='{1}'".format(start_date, end_date))
+# print(sql3)
 
 
 
-data3 = pd.read_sql(sql3, conn1)
-# #data1.columns.tolist()
+# data3 = pd.read_sql(sql3, conn1)
+# # #data1.columns.tolist()
 
-future_races_df = pd.DataFrame(data3)
-# future_races_df = pd.read_csv('dataset4(AutoRecovered).csv')
+# future_races_df = pd.DataFrame(data3)
+future_races_df = pd.read_csv('dataset4(AutoRecovered).csv')
 # load json and create model
 model_json = 'model-128-256-512-256-128-64-19(all relu)-20210119-15-20.json'
 json_file = open(model_json, 'r')
@@ -63,20 +63,36 @@ trainer_le = pickle.load(open(trainer_encoder_name, 'rb'))
 driver_encoder_name = 'Driver_Encoder.pkl'
 driver_le = pickle.load(open(driver_encoder_name, 'rb'))
 
+# load LabelEncoder for Driver
+sex_encoder_name = 'Sex_Encoder.pkl'
+sex_le = pickle.load(open(sex_encoder_name, 'rb'))
 
 # choose the important features from dataframe
-feature_df = future_races_df[['daycalender', 'racenumber', 'venue', 'racedistance', 'horseid', 'horsename', 'row', 'trainer', 'driver', 'handicap', 'age']].copy()
+feature_df = future_races_df[['daycalender', 'racenumber', 'venue', 'racedistance', 'horseid', 'horsename', 'row', 'trainer', 'driver', 'handicap', 'age', 'sex']].copy()
 feature_df = feature_df.rename(columns={"daycalender": "day", "racenumber": "raceno"})
 
 # apply Encoders
 # venue encoder
+feature_df['venue'] = feature_df['venue'].map(lambda s: '<unknown>' if s not in venue_le.classes_ else s)
+venue_le.classes_ = np.append(venue_le.classes_, '<unknown>')
 feature_df['venue'] = venue_le.transform(feature_df['venue'])
 # row encoder
+feature_df['row'] = feature_df['row'].map(lambda s: '<unknown>' if s not in row_le.classes_ else s)
+row_le.classes_ = np.append(row_le.classes_, '<unknown>')
 feature_df['row'] = row_le.transform(feature_df['row'])
 # trainer encoder
+feature_df['trainer'] = feature_df['trainer'].map(lambda s: '<unknown>' if s not in trainer_le.classes_ else s)
+trainer_le.classes_ = np.append(trainer_le.classes_, '<unknown>')
+print(trainer_le.classes_)
 feature_df['trainer'] = trainer_le.transform(feature_df['trainer'])
 # driver encoder
+feature_df['driver'] = feature_df['driver'].map(lambda s: '<unknown>' if s not in driver_le.classes_ else s)
+driver_le.classes_ = np.append(driver_le.classes_, '<unknown>')
 feature_df['driver'] = driver_le.transform(feature_df['driver'])
+# sex encoder
+feature_df['sex'] = feature_df['sex'].map(lambda s: '<unknown>' if s not in sex_le.classes_ else s)
+sex_le.classes_ = np.append(sex_le.classes_, '<unknown>')
+feature_df['sex'] = sex_le.transform(feature_df['sex'])
 
 # remove duplicated rows
 feature_df = feature_df.drop_duplicates()
@@ -100,8 +116,8 @@ print(group_df)
 
 columns = ['venue', 'racedistance']
 extend_columns = ['venue', 'racedistance', 'day']
-common_columns = ['horseid', 'row', 'trainer', 'driver', 'handicap', 'age']
-extend_common_columns = ['horseid', 'horsename', 'row', 'trainer', 'driver', 'handicap', 'age']
+common_columns = ['horseid', 'row', 'trainer', 'driver', 'handicap', 'age', 'sex']
+extend_common_columns = ['horseid', 'horsename', 'row', 'trainer', 'driver', 'handicap', 'age', 'sex']
 
 max_number = 19
 for i in range(1, max_number + 1):
@@ -145,6 +161,7 @@ for group_name, df in group_df:
         ext_item['horseid' + str(index)] = item['horseid' + str(index)] = row['horseid']
         ext_item['handicap' + str(index)] = item['handicap' + str(index)] = row['handicap']
         ext_item['age' + str(index)] = item['age' + str(index)] = row['age']
+        ext_item['sex' + str(index)] = item['sex' + str(index)] = row['sex']
         ext_item['horsename' + str(index)] = row['horsename']
         index += 1
     ext_item['horsecnt'] = index - 1
@@ -158,6 +175,7 @@ for group_name, df in group_df:
         ext_item['horseid' + str(index1)] = item['horseid' + str(index1)] = 0
         ext_item['handicap' + str(index1)] = item['handicap' + str(index1)] = 0
         ext_item['age' + str(index1)] = item['age' + str(index1)] = 0
+        ext_item['sex' + str(index)] = item['sex' + str(index)] = 0
     test_df = test_df.append(item, ignore_index = True)
     extend_df = extend_df.append(ext_item, ignore_index = True)
 test_df = test_df.fillna(0)

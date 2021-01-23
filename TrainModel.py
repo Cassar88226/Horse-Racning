@@ -114,7 +114,7 @@ checkpoint = ModelCheckpoint(model_weight_name, monitor='val_loss', mode='min', 
 #set early stopping monitor so the model stops training when it won't improve anymore
 early_stopping_monitor = EarlyStopping(patience=5)
 #train model
-H = model.fit(X_train, y_train, validation_split=0.2, epochs=200, callbacks=[checkpoint], batch_size=16)
+H = model.fit(X_train, y_train, validation_split=0.2, epochs=2, callbacks=[checkpoint], batch_size=16)
 
 # save the model structure into json format
 model_json = model.to_json()
